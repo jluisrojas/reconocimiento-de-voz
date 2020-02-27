@@ -45,7 +45,9 @@ class GeneradorDataset():
     Genera el dataset de una cierta distribucion
     """
     def generar_distribucion(self, ruta, distribucion, sub_ruta=""):
-        dataset = None
+        tamanos_frames = []
+        dataset = []
+        masks = []
         df = self.leer_csv(ruta + distribucion + ".csv")
 
         for indice, renglon in df.iterrows():
@@ -56,12 +58,37 @@ class GeneradorDataset():
 
             # Divide el spectrgrama en frames
             frames = tf.signal.frame(features, self.fl, self.fs, axis=1, pad_end=True)
-            print(frames)
+            num_frames = frames.shape[1]
 
-            if dataset == None:
-                dataset = frames
-            else:
-                dataset = tf.concat([dataset, frames], 0)
+            tamanos_frames.append(num_frames)
+            dataset.append(frames)
+            # Crea el mask del input
+            masks.append(tf.ones([1, num_frames]))
 
-        return dataset
+        # Obtiene el numero mayor de frames en el dataset de esta 
+        # manera se realiza el padding para entrenamiento
+        padding = max(tamanos_frames)
+        padded_dataset = []
+        padded_masks = []
+
+        # Padea todos los elementos del dataset
+        for i, num_frames in enumerate(tamanos_frames):
+            # Agrega padding al input
+            paddings = [[0,0], [0, padding - num_frames], [0,0], [0,0]]
+            frames = tf.pad(dataset[i], paddings, "CONSTANT")
+
+            # Agrega padding al mask y lo hace booleano
+            mask = tf.pad(masks[i], [[0,0], [0, padding - num_frames]], "CONSTANT")
+            mask = tf.math.equal(mask, tf.ones([1, padding]))
+
+            padded_dataset.append(frames)
+            padded_masks.append(mask)
+            print(frames.shape)
+
+
+        tensor_dataset = tf.concat(padded_dataset, 0)
+        tensor_masks = tf.concat(padded_masks, 0)
+        print(tensor_masks)
+
+        return tensor_dataset
 

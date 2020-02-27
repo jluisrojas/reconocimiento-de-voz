@@ -6,8 +6,7 @@ def main():
     generador = GeneradorDataset(spectrograma)
     test = generador.generar_distribucion("dataset/common-voice/es/", "test",
         sub_ruta="clips/")
-
-    print(test)
+    print(test.shape)
 
 
 if __name__ == "__main__":
