@@ -59,7 +59,6 @@ class GeneradorDataset():
             # Divide el spectrgrama en frames
             frames = tf.signal.frame(features, self.fl, self.fs, axis=1, pad_end=True)
             num_frames = frames.shape[1]
-            print(num_frames)
 
             tamanos_frames.append(num_frames)
             dataset.append(frames)
@@ -78,6 +77,9 @@ class GeneradorDataset():
             paddings = [[0,0], [0, padding - num_frames], [0,0], [0,0]]
             frames = tf.pad(dataset[i], paddings, "CONSTANT")
 
+            padded_dataset.append(frames)
+
+            """
             # Agrega padding al mask y lo hace booleano
             #mask = tf.pad(masks[i], [[0,0], [0, padding - num_frames]], "CONSTANT")
             #mask = tf.math.equal(mask, tf.ones([1, padding]))
@@ -93,21 +95,16 @@ class GeneradorDataset():
             mask = tf.math.reduce_sum(tf.ones_like(mask), 0)
             print(mask)
 
-            """
             s = frames.shape
             print(s)
             mask = tf.keras.layers.Masking(mask_value=0.0)(tf.reshape(frames,
                 [s[-4], s[-3], s[-1]*s[-2]]))
             print(mask.shape)
+            padded_masks.append(mask)
             """
 
-            padded_dataset.append(frames)
-            padded_masks.append(mask)
-            #print(frames.shape)
-
-
         tensor_dataset = tf.concat(padded_dataset, 0)
-        tensor_masks = tf.concat(padded_masks, 0)
+        #tensor_masks = tf.concat(padded_masks, 0)
         #print(tensor_masks)
 
         return tensor_dataset
