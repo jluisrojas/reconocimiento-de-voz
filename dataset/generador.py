@@ -76,6 +76,7 @@ class GeneradorDataset():
             # Agrega padding al input
             paddings = [[0,0], [0, padding - num_frames], [0,0], [0,0]]
             frames = tf.pad(dataset[i], paddings, "CONSTANT")
+            frames = tf.expand_dims(frames, -1)
 
             padded_dataset.append(frames)
 
