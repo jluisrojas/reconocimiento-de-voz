@@ -56,8 +56,12 @@ class GeneradorDataset():
             # Obtine features del feature extractor
             features = self.features_extractor(sl, data)
 
-            # Divide el spectrgrama en frames
-            frames = tf.signal.frame(features, self.fl, self.fs, axis=1, pad_end=True)
+            if self.fl > 0:
+                # Divide el spectrgrama en frames
+                frames = tf.signal.frame(features, self.fl, self.fs, axis=1, pad_end=True)
+            else:
+                frames = features
+
             num_frames = frames.shape[1]
 
             tamanos_frames.append(num_frames)
@@ -74,7 +78,10 @@ class GeneradorDataset():
         # Padea todos los elementos del dataset
         for i, num_frames in enumerate(tamanos_frames):
             # Agrega padding al input
-            paddings = [[0,0], [0, padding - num_frames], [0,0], [0,0]]
+            if self.fl > 0:
+                paddings = [[0,0], [0, padding - num_frames], [0,0], [0,0]]
+            else:
+                paddings = [[0,0], [0, padding - num_frames], [0,0]]
             frames = tf.pad(dataset[i], paddings, "CONSTANT")
             frames = tf.expand_dims(frames, -1)
 

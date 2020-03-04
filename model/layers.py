@@ -18,9 +18,6 @@ class ObtenerMask(layers.Layer):
         return inputs
 
     def compute_mask(self, inputs, mask=None):
-        if mask is None:
-            return None
-
         shape = tf.shape(inputs)
 
         reshaped_input = tf.reshape(inputs, [shape[0], shape[1], -1])
@@ -30,3 +27,23 @@ class ObtenerMask(layers.Layer):
             dtype=tf.float32))
 
         return mask
+
+class MaskWrapper(layers.Wrapper):
+    def __init__(self, layer, **kwargs):
+        super(MaskWrapper, self).__init__(layer, **kwargs)
+        self.supports_masking = True
+
+    def call(self, inputs):
+        """
+        NOTA: se supone que el call no tiene argumentos
+        kwargs = {}
+        if has_arg(self.layer.call, 'training'):
+            kwargs['training'] = traininginp
+        """
+        return self.layer.call(inputs)
+
+    def compute_mask(self, inputs, mask=None):
+        return mask
+
+    def compute_output_shape(self, input_shape):
+        return self.layer.compute_output_shape(input_shape)
