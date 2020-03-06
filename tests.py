@@ -4,6 +4,8 @@ from features.spectrograma import SpectrogramaFeatures
 from vocabulario.esp import EspVocabulario
 from model.layers import ObtenerMask
 from model.deepspeech2 import obtener_ds2
+from ctc import ctc_loss
+from tensorflow.keras.optimizers import Adam
 
 def main():
     spectrograma = SpectrogramaFeatures()
@@ -21,8 +23,13 @@ def main():
         print(n_l.shape)
         print(n_f.shape)
 
-    model = obtener_ds2(input_dim=(53, 20, 513, 1), num_convs=3)
-    #model.summary()
+    model = obtener_ds2(input_dim=(105, 10, 513, 1), num_convs=3,
+            num_labels=len(vocabulario.caracteres))
+    model.summary()
+
+    print("[INFO] Compilando modelo")
+    opt = Adam()
+    model.compile(loss=ctc_loss.get_loss, optimizer=opt)
     #print(ObtenerMask()(test))
 
 

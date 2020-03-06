@@ -9,7 +9,7 @@ class EspVocabulario:
             "g", "h",
             "i", "j",
             "k", "l",
-            "m", "n",
+            "m", "n", "ñ",
             "o", "p",
             "q", "r",
             "s", "t",

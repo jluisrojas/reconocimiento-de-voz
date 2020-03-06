@@ -5,7 +5,7 @@ from tensorflow.keras.layers import BatchNormalization, TimeDistributed
 from tensorflow.keras.layers import Flatten, Dense, ReLU
 from tensorflow.keras import Model
 
-def obtener_ds2(input_dim=(10, 250), num_convs=1):
+def obtener_ds2(input_dim=(10, 250), num_convs=1, num_labels=27):
     input_tensor = Input(shape=input_dim, name="x")
     x = ObtenerMask()(input_tensor)
 
@@ -21,7 +21,7 @@ def obtener_ds2(input_dim=(10, 250), num_convs=1):
 
     x = TimeDistributed(Dense(64))(x)
     x = ReLU()(x)
-    x = TimeDistributed(Dense(25))(x)
+    x = TimeDistributed(Dense(num_labels))(x)
 
     output_tensor = x
 
