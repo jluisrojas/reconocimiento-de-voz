@@ -22,8 +22,9 @@ class GeneradorDataset():
     """
     
     """
-    def __init__(self, features_extractor, fl=10, fs=10):
+    def __init__(self, features_extractor, vocabulario, fl=10, fs=10):
         self.features_extractor = features_extractor
+        self.vocabulario = vocabulario
         self.fl = fl
         self.fs = fs
 
@@ -45,12 +46,26 @@ class GeneradorDataset():
     Genera el dataset de una cierta distribucion
     """
     def generar_distribucion(self, ruta, distribucion, sub_ruta=""):
+        # Labels
+        tamanos_labels = []
+        labels_list = []
+
+        # Features
         tamanos_frames = []
         dataset = []
         masks = []
         df = self.leer_csv(ruta + distribucion + ".csv")
 
         for indice, renglon in df.iterrows():
+            # Precicciones
+            cadena = renglon["sentence"]
+            logits = tf.convert_to_tensor(self.vocabulario(cadena))
+            labels = tf.expand_dims(logits, -1)
+
+            tamanos_labels.append(labels.shape[0])
+            labels_list.append(labels)
+
+            # Features
             sl, data = self.leer_wav(ruta + sub_ruta + renglon["path"])
 
             # Obtine features del feature extractor
@@ -69,23 +84,47 @@ class GeneradorDataset():
             # Crea el mask del input
             masks.append(tf.ones([1, num_frames]))
 
-        # Obtiene el numero mayor de frames en el dataset de esta 
+        # Obtiene el numero mayor de frames y labels en el dataset de esta 
         # manera se realiza el padding para entrenamiento
-        padding = max(tamanos_frames)
-        padded_dataset = []
-        padded_masks = []
+        max_labels = max(tamanos_labels)
+        max_frames= max(tamanos_frames)
+
+        features_d = []
+        labels_d = []
+        num_labels_d = []
+        num_frames_d = []
 
         # Padea todos los elementos del dataset
         for i, num_frames in enumerate(tamanos_frames):
-            # Agrega padding al input
+            # Agrega padding a los features
             if self.fl > 0:
-                paddings = [[0,0], [0, padding - num_frames], [0,0], [0,0]]
+                paddings = [[0,0], [0, max_frames- num_frames], [0,0], [0,0]]
             else:
-                paddings = [[0,0], [0, padding - num_frames], [0,0]]
+                paddings = [[0,0], [0, max_frames- num_frames], [0,0]]
+
             frames = tf.pad(dataset[i], paddings, "CONSTANT")
             frames = tf.expand_dims(frames, -1)
+            x = tf.squeeze(frames, axis=0)
 
-            padded_dataset.append(frames)
+            # Agrega padding a los labels
+            num_labels = tamanos_labels[i]
+            labels = tf.pad(labels_list[i],[[0, max_labels-num_labels], [0,
+                0]], constant_values=-1)
+
+            # concatena el dataset
+            features_d.append(x)
+            num_labels_d.append(tf.convert_to_tensor([num_labels]))
+            num_frames_d.append(tf.convert_to_tensor([num_frames]))
+            labels_d.append(labels)
+
+
+            #print(y_true)
+            """
+            print("features: " + str(frames.shape))
+            print("labels: " + str(labels.shape))
+            print("label_length: " + str(num_labels))
+            print("frames_length: " + str(num_frames))
+            """
 
             """
             # Agrega padding al mask y lo hace booleano
@@ -111,9 +150,6 @@ class GeneradorDataset():
             padded_masks.append(mask)
             """
 
-        tensor_dataset = tf.concat(padded_dataset, 0)
-        #tensor_masks = tf.concat(padded_masks, 0)
-        #print(tensor_masks)
-
-        return tensor_dataset
+        #return x_dataset, y_dataset
+        return features_d, labels_d, num_labels_d, num_frames_d
 
