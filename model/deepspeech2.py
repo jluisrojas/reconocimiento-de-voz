@@ -2,7 +2,7 @@ import tensorflow as tf
 from .layers import ObtenerMask, MaskWrapper
 from tensorflow.keras.layers import ConvLSTM2D, GRU, Input, Bidirectional
 from tensorflow.keras.layers import BatchNormalization, TimeDistributed
-from tensorflow.keras.layers import Flatten, Dense, ReLU
+from tensorflow.keras.layers import Flatten, Dense, ReLU, Reshape
 from tensorflow.keras import Model
 
 def obtener_ds2(input_dim=(10, 250), num_convs=1, num_labels=27):
@@ -10,8 +10,9 @@ def obtener_ds2(input_dim=(10, 250), num_convs=1, num_labels=27):
     x = ObtenerMask()(input_tensor)
 
     for i in range(num_convs):
-        x = ConvLSTM2D(8, (4, 4), padding="valid", return_sequences=True,
-                data_format="channels_last")(x)
+        x = ConvLSTM2D(filters=8, kernel_size=(3, 3), padding="valid", return_sequences=True,
+                data_format="channels_last",
+                input_shape=input_dim)(x)
         x = BatchNormalization()(x)
 
     x = TimeDistributed(MaskWrapper(Flatten()))(x)

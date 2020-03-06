@@ -16,6 +16,15 @@ def main():
     dataset = tf.data.Dataset.from_tensor_slices((features, (labels,
         num_labels, num_frames)))
 
+    def resize(x, y):
+        x = tf.image.resize(x, [20, 20])
+        return x, y
+
+    #dataset = dataset.map(resize)
+
+    model = obtener_ds2(input_dim=(105, 10, 513, 1), num_convs=3,
+            num_labels=len(vocabulario.caracteres))
+
     for x, y in dataset.batch(10).take(1):
         l, n_l, n_f = y
         print(x.shape)
@@ -23,14 +32,44 @@ def main():
         print(n_l.shape)
         print(n_f.shape)
 
-    model = obtener_ds2(input_dim=(105, 10, 513, 1), num_convs=3,
-            num_labels=len(vocabulario.caracteres))
+        #print(model(x))
+
     model.summary()
 
-    print("[INFO] Compilando modelo")
-    opt = Adam()
-    model.compile(loss=ctc_loss.get_loss, optimizer=opt)
-    #print(ObtenerMask()(test))
+    def loss(model, x, y, training):
+        y_ = model(x, training=True)
+
+        return ctc_loss.get_loss(y, y_)
+
+    def grad(model, inputs, targets):
+        with tf.GradientTape() as tape:
+            loss_value = loss(model, inputs, targets, training=True)
+
+        return loss_value, tape.gradient(loss_value, model.trainable_variables)
+
+    optimizer = Adam()
+
+    train_loss_results = []
+    train_accuracy_results = []
+
+    num_epochs = 1
+
+    for epoch in range(num_epochs):
+        epoch_loss_avg = tf.keras.metrics.Mean()
+
+        for x, y in dataset.batch(10).take(1):
+            # Optimize the model
+            loss_value, grads = grad(model, x, y)
+            optimizer.apply_gradients(zip(grads, model.trainable_variables))
+
+            epoch_loss_avg(loss_value)
+
+        train_loss_results.append(epoch_loss_avg.result())
+
+        print("Epoch {:03d}: Loss: {:.3f}".format(epoch,
+                epoch_loss_avg.result()))
+
+
 
 
 if __name__ == "__main__":

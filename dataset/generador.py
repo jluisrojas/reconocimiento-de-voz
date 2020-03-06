@@ -60,7 +60,8 @@ class GeneradorDataset():
             # Precicciones
             cadena = renglon["sentence"]
             logits = tf.convert_to_tensor(self.vocabulario(cadena))
-            labels = tf.expand_dims(logits, -1)
+            labels = logits
+            #labels = tf.expand_dims(logits, -1)
 
             tamanos_labels.append(labels.shape[0])
             labels_list.append(labels)
@@ -86,7 +87,7 @@ class GeneradorDataset():
 
         # Obtiene el numero mayor de frames y labels en el dataset de esta 
         # manera se realiza el padding para entrenamiento
-        max_labels = max(tamanos_labels)
+        max_labels = max(tamanos_labels) + 1
         max_frames= max(tamanos_frames)
 
         features_d = []
@@ -108,8 +109,9 @@ class GeneradorDataset():
 
             # Agrega padding a los labels
             num_labels = tamanos_labels[i]
-            labels = tf.pad(labels_list[i],[[0, max_labels-num_labels], [0,
-                0]], constant_values=-1)
+            #labels = tf.pad(labels_list[i],[[0, max_labels-num_labels], [0,
+            #    0]], constant_values=-1)
+            labels = tf.pad(labels_list[i],[[0, max_labels-num_labels]], constant_values=-1)
 
             # concatena el dataset
             features_d.append(x)
