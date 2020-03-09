@@ -58,7 +58,6 @@ def main():
         epoch_loss_avg = tf.keras.metrics.Mean()
 
         for x, y in dataset.batch(10).take(1):
-            # Optimize the model
             loss_value, grads = grad(model, x, y)
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
