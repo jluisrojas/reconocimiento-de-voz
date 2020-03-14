@@ -38,14 +38,17 @@ class GeneradorDataset():
         data = tf.cast(data, tf.float32)
         return sampling_rate, data
 
-    def leer_csv(self, archivo_csv):
+    def leer_csv(self, archivo_csv, tamano=None):
         df = pd.read_csv(archivo_csv)
-        return df#.iloc[0]
+        if tamano is not None:
+            return df.head(tamano)
+        else:
+            return df
 
     """
     Genera el dataset de una cierta distribucion
     """
-    def generar_distribucion(self, ruta, distribucion, sub_ruta=""):
+    def generar_distribucion(self, ruta, distribucion, sub_ruta="", tamano=None):
         # Labels
         tamanos_labels = []
         labels_list = []
@@ -54,7 +57,7 @@ class GeneradorDataset():
         tamanos_frames = []
         dataset = []
         masks = []
-        df = self.leer_csv(ruta + distribucion + ".csv")
+        df = self.leer_csv(ruta + distribucion + ".csv", tamano=tamano)
 
         for indice, renglon in df.iterrows():
             # Precicciones

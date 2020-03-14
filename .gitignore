@@ -1,4 +1,4 @@
 *.DS_Store
 *.swp
 
-dataset/common-voice/
+src/dataset/common-voice/
