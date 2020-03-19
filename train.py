@@ -5,6 +5,7 @@ from src.model import obtener_ds2
 from src.dataset import CVMDistrib, DataDistrib
 from src.pipeline import DS2Pipeline
 
+# Prueba desde ubuntu
 def main():
     print("[INFO] Inicializando modulos para pipeline")
     spectrograma = SpectrogramaFeatures()
