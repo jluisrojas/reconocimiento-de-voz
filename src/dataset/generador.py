@@ -155,6 +155,8 @@ class GeneradorDataset():
             padded_masks.append(mask)
             """
 
-        #return x_dataset, y_dataset
+       	#return x_dataset, y_dataset
+        print("Tamano del dataset {}".format(len(features_d)))
+        print("shape de los features {}".format(features_d[0].shape))
         return features_d, labels_d, num_labels_d, num_frames_d
 

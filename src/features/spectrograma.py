@@ -60,4 +60,6 @@ class SpectrogramaFeatures(ExtractorFeatures):
 
         stfts = self.standarizar_s(stfts)
 
+        stfts = stfts / (tf.reduce_max(tf.abs(stfts)))
+
         return stfts

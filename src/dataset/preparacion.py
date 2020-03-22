@@ -16,8 +16,11 @@ Metodo que lee un archivo mp3 y lo convierte a wav, utilizando
 el mismo nombre
 """
 def mp3_a_wav(src):
-    audio = AudioSegment.from_mp3(src)
-    audio.export(src[:-4]+".wav", format="wav")
+	if os.path.isfile(src[:-4]+".wav"):
+		pass
+	else:
+		audio = AudioSegment.from_mp3(src)
+		audio.export(src[:-4]+".wav", format="wav")
 
 """
 Metodo para procesar una distribucion del dataset de common voice.
@@ -28,7 +31,7 @@ def common_proc_distrib(path, tsv_file, carpeta_clips):
     df = pd.read_csv(path+tsv_file, sep="\t")
     df = df[["path", "sentence"]]
 
-    df = df.head(20)
+    # df = df.head(20)
 
     num_renglones = len(df.index)
 

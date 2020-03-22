@@ -10,13 +10,13 @@ def obtener_ds2(input_dim=(10, 250), num_convs=1, num_labels=27):
     x = ObtenerMask()(input_tensor)
 
     for i in range(num_convs):
-        x = ConvLSTM2D(filters=8, kernel_size=(3, 3), padding="valid", return_sequences=True,
+        x = ConvLSTM2D(filters=3, kernel_size=(3, 3), padding="valid", return_sequences=True,
                 data_format="channels_last",
                 input_shape=input_dim)(x)
         x = BatchNormalization()(x)
 
     x = TimeDistributed(MaskWrapper(Flatten()))(x)
-    for i in range(6):
+    for i in range(3):
         #pass
         x = Bidirectional(GRU(32, return_sequences=True))(x)
 

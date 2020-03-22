@@ -1,6 +1,6 @@
 from preparacion import *
 
-distribuciones = ["test"]
+distribuciones = ["train"]
 
 def main():
     for distribucion in distribuciones:
