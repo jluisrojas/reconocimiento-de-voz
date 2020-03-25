@@ -1,7 +1,8 @@
 import json
 import pandas as pd
 import tensorflow as tf
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, RMSprop
+import matplotlib.pyplot as plt
 
 from .pipeline import Pipeline
 #from .. import ctc
@@ -11,9 +12,20 @@ from ..ctc import get_loss
 Se define el pipeline de entrenamiento para Deep Speech 2, considerando:
 	- CTC loss
 """
+
 class DS2Pipeline(Pipeline):
+
+	def memory(self):
+		import os
+		import psutil
+		pid = os.getpid()
+		py = psutil.Process(pid)
+		memoryUse = py.memory_info()[0]/2.**30  # memory use in GB...I think
+		print('memory use:', memoryUse)
+
+
 	"""
-	Constructor del pipeline de ds2
+	Constructorydel pipeline de ds2
 	Args:
 		model: Keras Model que se va usar para entrenarlos
 		features: objeto de tipo FeatureExtractor para obtener features del dataset
@@ -30,6 +42,8 @@ class DS2Pipeline(Pipeline):
 
 		self.logs_path = "./training_logs/"
 
+		#self.train_epoch = tf.autograph.to_graph(self.train_epoch)
+
 	def get_config(self):
 		return {
 			"nombre": self.nombre,
@@ -39,11 +53,13 @@ class DS2Pipeline(Pipeline):
 			"dataset_dsitrib": self.dataset_distrib.get_config()
 		}
 
+	@tf.function
 	def loss(self, x, y, training):
 			y_ = self.model(x, training=True)
 
 			return get_loss(y, y_)
 
+	@tf.function
 	def grad(self, inputs, targets):
 			with tf.GradientTape() as tape:
 				loss_value = self.loss(inputs, targets, training=True)
@@ -77,41 +93,59 @@ class DS2Pipeline(Pipeline):
 		epochs = setup["epochs"]
 		i_epoch = setup["initial_epoch"]
 
-		optimizer = Adam(lr=lr)
+		#optimizer = Adam()
+		optimizer = RMSprop()
 
 		train = train.batch(bs)
 		test  = test.batch(bs)
 
+		self.train(optimizer, train, epochs)
 
 
+	def train(self, optimizer, train, epochs):
 		columnas = ["epoch", "loss"]
 		logs = { }
 		for c in columnas:
 			logs[c] = []
 
 		for epoch in range(epochs):
-			print("Iniciando epoch: {}".format(epoch))
 			logs["epoch"].append(epoch)
+			print("Iniciando epoch: {}".format(epoch))
+			self.memory()
 
-			epoch_loss = None
-			
-			for x, y in train:
-				loss_value, grads = self.grad(x, y)
-				optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+			epoch_loss = self.train_epoch(optimizer, train)
 
-				if epoch_loss == None:
-					epoch_loss = loss_value
-				else:
-					epoch_loss = tf.concat([epoch_loss, loss_value], 0)
-				
-			loss_mean = tf.reduce_mean(epoch_loss).numpy()
-			logs["loss"].append(loss_mean)
+			if not epoch_loss == None:
+				loss_mean = tf.reduce_mean(epoch_loss).numpy()
+				logs["loss"].append(loss_mean)
 
-			print("Epoch {:03d}: Loss: {:.3f}".format(epoch, loss_mean))
+				print("Epoch {:03d}: Loss: {:.3f}".format(epoch, loss_mean))
 
 			# Guardando log en csv
 			df = pd.DataFrame(logs, columns=columnas)
 			df.to_csv(self.logs_path+self.nombre+"/logs.csv", index=False)
 
+			plt.plot(logs["loss"])
+			plt.draw()
+			plt.pause(0.001)
+			#plt.show(block=False)
+
+	#@tf.function
+	def train_epoch(self, optimizer, train):
+
+		epoch_loss = [] 
+	
+		tf.summary.trace_off()
+		for x, y in train:
+			loss_value, grads = self.grad(x, y)
+			optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+
+			epoch_loss.append(loss_value)
+
+		tf.summary.trace_on()
+
+		return epoch_loss
+
+		
 
 

@@ -62,4 +62,7 @@ class SpectrogramaFeatures(ExtractorFeatures):
 
         stfts = stfts / (tf.reduce_max(tf.abs(stfts)))
 
+        print("Max: {}".format(tf.reduce_max(stfts)))
+        print("Min: {}".format(tf.reduce_min(stfts)))
+
         return stfts

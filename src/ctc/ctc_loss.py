@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 
+@tf.function
 def get_loss(y_actual, y_prediccion):
     labels, long_labels, long_frames = y_actual
 
@@ -10,5 +11,7 @@ def get_loss(y_actual, y_prediccion):
 
     loss = tf.nn.ctc_loss(labels, y_prediccion, long_labels,
             long_frames, logits_time_major=False, blank_index=-1)
+
+    loss = tf.reduce_mean(loss)
 
     return loss

@@ -12,12 +12,12 @@ def main():
 	vocabulario = EspVocabulario()
 
 	print("[INFO] Cargando modelo Deep Speech 2")
-	model = obtener_ds2(input_dim=(None, 10, 127, 1), num_convs=1,
+	model = obtener_ds2(input_dim=(987, 127, 1), num_convs=1,
 		num_labels=len(vocabulario.caracteres))
 
 	model.summary()
 
-	dataset = CVMDistrib(features=spectrograma, vocabulario=vocabulario)
+	dataset = CVMDistrib(frame_length=0, features=spectrograma, vocabulario=vocabulario)
 
 	pipeline = DS2Pipeline(model=model, features=spectrograma,
 		vocabulario=vocabulario, dataset_distrib=dataset)
@@ -33,7 +33,7 @@ def main():
 			{
 				"learning_rate": 1e-3,
 				"batch_size": 20,
-				"epochs": 100,
+				"epochs": 200,
 				"initial_epoch": 0
 			}
 		)
