@@ -90,8 +90,11 @@ class GeneradorDataset():
 
         # Obtiene el numero mayor de frames y labels en el dataset de esta 
         # manera se realiza el padding para entrenamiento
-        max_labels = max(tamanos_labels) + 1
+        max_labels = max(tamanos_labels)
         max_frames= max(tamanos_frames)
+
+        print("max labels: {}".format(max_labels))
+        print(tamanos_labels)
 
         features_d = []
         labels_d = []
@@ -114,7 +117,7 @@ class GeneradorDataset():
             num_labels = tamanos_labels[i]
             #labels = tf.pad(labels_list[i],[[0, max_labels-num_labels], [0,
             #    0]], constant_values=-1)
-            labels = tf.pad(labels_list[i],[[0, max_labels-num_labels]], constant_values=-1)
+            labels = tf.pad(labels_list[i],[[0, max_labels-num_labels]], constant_values=0)
 
             # concatena el dataset
             features_d.append(x)

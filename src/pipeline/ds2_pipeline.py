@@ -93,8 +93,8 @@ class DS2Pipeline(Pipeline):
 		epochs = setup["epochs"]
 		i_epoch = setup["initial_epoch"]
 
-		#optimizer = Adam()
-		optimizer = RMSprop()
+		optimizer = Adam()
+		#optimizer = RMSprop()
 
 		train = train.batch(bs)
 		test  = test.batch(bs)
