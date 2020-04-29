@@ -7,7 +7,7 @@ from src.pipeline import DS2Pipeline
 
 # Prueba desde ubuntu
 def main():
-	print("[INFO] Inicializando modulos para pipeline")
+    print("[INFO] Inicializando modulos para pipeline")
 	spectrograma = SpectrogramaFeatures(stft_fft=252)
 	vocabulario = EspVocabulario()
 
