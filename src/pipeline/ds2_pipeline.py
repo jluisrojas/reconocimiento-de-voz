@@ -42,7 +42,6 @@ class DS2Pipeline(Pipeline):
 
 		self.logs_path = "./training_logs/"
 
-		#self.train_epoch = tf.autograph.to_graph(self.train_epoch)
 
 	def get_config(self):
 		return {
@@ -54,17 +53,21 @@ class DS2Pipeline(Pipeline):
 		}
 
 	@tf.function
-	def loss(self, x, y, training):
-			y_ = self.model(x, training=True)
+	def predict(self, x, y, training=True):
+			return self.model(x, training=training)
 
-			return get_loss(y, y_)
+	@tf.function
+	def loss(self, x, y, training):
+			y_ = self.predict(x, y, training=True)
+
+			return y_, get_loss(y, y_)
 
 	@tf.function
 	def grad(self, inputs, targets):
 			with tf.GradientTape() as tape:
-				loss_value = self.loss(inputs, targets, training=True)
+				y_, loss_value = self.loss(inputs, targets, training=True)
 
-			return loss_value, tape.gradient(loss_value, self.model.trainable_variables)
+			return y_, loss_value, tape.gradient(loss_value, self.model.trainable_variables)
 	"""
 	Inicia el entrenamiento del modelo con las descripciones del dataset
 	Args:
@@ -84,7 +87,7 @@ class DS2Pipeline(Pipeline):
 
 		print("[INFO] Cargando distribuciones del datasetpipeline")
 		train = self.dataset_distrib(train_descrip)
-		test = self.dataset_distrib(test_descrip)
+		#test = self.dataset_distrib(test_descrip)
 
 		print(train)
 
@@ -97,7 +100,7 @@ class DS2Pipeline(Pipeline):
 		#optimizer = RMSprop()
 
 		train = train.batch(bs)
-		test  = test.batch(bs)
+		#test  = test.batch(bs)
 
 		self.train(optimizer, train, epochs)
 
@@ -130,6 +133,14 @@ class DS2Pipeline(Pipeline):
 			plt.pause(0.001)
 			#plt.show(block=False)
 
+	@tf.function
+	def decode(self, y_, sequence_length):
+		sequence_length = tf.reshape(sequence_length, [-1])
+		y_ = tf.transpose(y_, [1, 0, 2])
+		decoded, _ = tf.nn.ctc_greedy_decoder(y_, sequence_length)
+
+		return decoded
+
 	#@tf.function
 	def train_epoch(self, optimizer, train):
 
@@ -137,8 +148,30 @@ class DS2Pipeline(Pipeline):
 	
 		tf.summary.trace_off()
 		for x, y in train:
-			loss_value, grads = self.grad(x, y)
+			y_, loss_value, grads = self.grad(x, y)
 			optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+
+			_, _, lf = y
+			print("DECODING")
+			d = self.decode(y_, lf)
+			decoded = d[0]
+
+			encodedLabelStrs = [[] for i in range(20)]
+			idxDict = { b : [] for b in range(20) }
+			for (idx, idx2d) in enumerate(decoded.indices):
+				label = decoded.values[idx]
+				batchElement = idx2d[0] # index according to [b,t]
+				encodedLabelStrs[batchElement].append(label)
+
+
+			print("CADENAS")
+			for strs in encodedLabelStrs:
+				cadena = ""
+				for c in strs:
+					caracter = c.numpy()
+					cadena += self.vocabulario.caracteres[caracter]
+					
+				print(cadena)
 
 			epoch_loss.append(loss_value)
 

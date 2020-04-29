@@ -28,7 +28,6 @@ def obtener_ds2(input_dim=(10, 250), num_convs=1, num_labels=27):
     x = TimeDistributed(Dense(1024))(x)
     x = TimeDistributed(ReLU())(x)
     x = TimeDistributed(Dense(num_labels))(x)
-    x = TimeDistributed(Softmax())(x)
 
     output_tensor = x
 

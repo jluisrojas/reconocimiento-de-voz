@@ -24,15 +24,15 @@ def main():
 
 	print(pipeline.get_config())
 
-	train_descripcion = DataDescripcion(distribucion="train", tamano=50)
-	test_descripcion = DataDescripcion(distribucion="test", tamano=50)
+	train_descripcion = DataDescripcion(distribucion="train", tamano=20)
+	test_descripcion = DataDescripcion(distribucion="test", tamano=20)
 
 
 	print("[INFO] Entrenando modelo")
 	pipeline.fit(train_descripcion, test_descripcion,
 			{
 				"learning_rate": 1e-3,
-				"batch_size": 50,
+				"batch_size": 20,
 				"epochs": 200,
 				"initial_epoch": 0
 			}

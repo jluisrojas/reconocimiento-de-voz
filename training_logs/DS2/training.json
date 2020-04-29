@@ -1,16 +1,16 @@
 {
     "setup": {
         "learning_rate": 0.001,
-        "batch_size": 50,
+        "batch_size": 20,
         "epochs": 200,
         "initial_epoch": 0
     },
     "train_descrip": {
         "distribucion": "train",
-        "tamano": 50
+        "tamano": 20
     },
     "test_descrip": {
         "distribucion": "test",
-        "tamano": 50
+        "tamano": 20
     }
 }

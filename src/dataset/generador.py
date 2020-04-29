@@ -93,9 +93,6 @@ class GeneradorDataset():
         max_labels = max(tamanos_labels)
         max_frames= max(tamanos_frames)
 
-        print("max labels: {}".format(max_labels))
-        print(tamanos_labels)
-
         features_d = []
         labels_d = []
         num_labels_d = []
@@ -117,7 +114,7 @@ class GeneradorDataset():
             num_labels = tamanos_labels[i]
             #labels = tf.pad(labels_list[i],[[0, max_labels-num_labels], [0,
             #    0]], constant_values=-1)
-            labels = tf.pad(labels_list[i],[[0, max_labels-num_labels]], constant_values=0)
+            labels = tf.pad(labels_list[i],[[0, max_labels-num_labels]], constant_values=-1)
 
             # concatena el dataset
             features_d.append(x)
@@ -126,37 +123,6 @@ class GeneradorDataset():
             labels_d.append(labels)
 
 
-            #print(y_true)
-            """
-            print("features: " + str(frames.shape))
-            print("labels: " + str(labels.shape))
-            print("label_length: " + str(num_labels))
-            print("frames_length: " + str(num_frames))
-            """
-
-            """
-            # Agrega padding al mask y lo hace booleano
-            #mask = tf.pad(masks[i], [[0,0], [0, padding - num_frames]], "CONSTANT")
-            #mask = tf.math.equal(mask, tf.ones([1, padding]))
-
-            s = frames.shape
-
-            mask = tf.reshape(frames, [s[-4], s[-3], s[-1]*s[-2]])
-            mask = tf.math.reduce_max(mask, 2)
-
-            mask2 = tf.not_equal(mask, tf.zeros([s[-4],s[-3]], dtype=tf.float32))
-            mask = tf.boolean_mask(mask, mask2)
-
-            mask = tf.math.reduce_sum(tf.ones_like(mask), 0)
-            print(mask)
-
-            s = frames.shape
-            print(s)
-            mask = tf.keras.layers.Masking(mask_value=0.0)(tf.reshape(frames,
-                [s[-4], s[-3], s[-1]*s[-2]]))
-            print(mask.shape)
-            padded_masks.append(mask)
-            """
 
        	#return x_dataset, y_dataset
         print("Tamano del dataset {}".format(len(features_d)))
