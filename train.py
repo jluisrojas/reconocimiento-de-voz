@@ -1,4 +1,4 @@
-from src.features import SpectrogramaFeatures
+from src.features import SpectrogramaFeatures, SpectrogramaFeatures2
 from src.vocabulario import EspVocabulario
 from src.model import obtener_ds2
 
@@ -7,12 +7,13 @@ from src.pipeline import DS2Pipeline
 
 # Prueba desde ubuntu
 def main():
-    print("[INFO] Inicializando modulos para pipeline")
-	spectrograma = SpectrogramaFeatures(stft_fft=252)
+	print("[INFO] Inicializando modulos para pipeline")
+	#spectrograma = SpectrogramaFeatures(stft_fft=252)
+	spectrograma = SpectrogramaFeatures2(stft_fft=252)
 	vocabulario = EspVocabulario()
 
 	print("[INFO] Cargando modelo Deep Speech 2")
-	model = obtener_ds2(input_dim=(987, 127, 1), num_convs=1,
+	model = obtener_ds2(input_dim=(804, 442, 1), num_convs=1,
 		num_labels=len(vocabulario.caracteres)+1)
 
 	model.summary()

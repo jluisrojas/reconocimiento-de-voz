@@ -1,1 +1,1 @@
-from .spectrograma import SpectrogramaFeatures
+from .spectrograma import SpectrogramaFeatures, SpectrogramaFeatures2

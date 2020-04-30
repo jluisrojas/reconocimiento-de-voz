@@ -21,7 +21,8 @@ def obtener_ds2(input_dim=(10, 250), num_convs=1, num_labels=27):
         x = BatchNormalization()(x)
 
     # x = TimeDistributed(Flatten())(x)
-    x = Reshape([-1, 127*32])(x)
+    #x = Reshape([-1, 127*32])(x)
+    x = Reshape([-1, 442*32])(x)
     for i in range(5):
         x = Bidirectional(GRU(units=512, activation="tanh", recurrent_activation="sigmoid", return_sequences=True), merge_mode="concat")(x)
 
