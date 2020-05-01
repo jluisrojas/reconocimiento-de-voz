@@ -50,14 +50,15 @@ class SpectrogramaFeatures2(ExtractorFeatures):
     """
     def obtener_stft(self, data):
         data = self.normalizar_s(data)
-        audio = tf.cast((data * np.iinfo(np.int16).max), tf.int16)
+        audio = data
+        #audio = tf.cast((data * np.iinfo(np.int16).max), tf.int16)
         frames = python_speech_features.sigproc.framesig(
             audio, self.stft_fl, self.stft_fs
         )
         features = python_speech_features.sigproc.logpowspec(
             frames, self.stft_fl, norm=1
         )
-        #features = features[:, :252]  # Cut high frequency part
+        features = features[:, :252]  # Cut high frequency part
 
         features = self.standarizar_s(features) 
 

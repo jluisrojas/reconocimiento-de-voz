@@ -65,6 +65,7 @@ class GeneradorDataset():
             logits = tf.convert_to_tensor(self.vocabulario(cadena))
             labels = logits
             #labels = tf.expand_dims(logits, -1)
+            print(labels.shape)
 
             tamanos_labels.append(labels.shape[0])
             labels_list.append(labels)
@@ -74,6 +75,7 @@ class GeneradorDataset():
 
             # Obtine features del feature extractor
             features = self.features_extractor(sl, data)
+            print(features.shape)
 
             if self.fl > 0:
                 # Divide el spectrgrama en frames
@@ -92,6 +94,7 @@ class GeneradorDataset():
         # manera se realiza el padding para entrenamiento
         max_labels = max(tamanos_labels)
         max_frames= max(tamanos_frames)
+        print(max_frames)
 
         features_d = []
         labels_d = []
@@ -119,7 +122,8 @@ class GeneradorDataset():
             # concatena el dataset
             features_d.append(x)
             num_labels_d.append(tf.convert_to_tensor([num_labels]))
-            num_frames_d.append(tf.convert_to_tensor([num_frames]))
+            #num_frames_d.append(tf.convert_to_tensor([num_frames]))
+            num_frames_d.append(tf.convert_to_tensor([201]))
             labels_d.append(labels)
 
 
