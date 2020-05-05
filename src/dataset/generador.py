@@ -92,7 +92,7 @@ class GeneradorDataset():
         # manera se realiza el padding para entrenamiento
         max_labels = max(tamanos_labels)
         max_frames= max(tamanos_frames)
-        print(max_frames)
+        #print(max_frames)
 
         features_d = []
         labels_d = []
@@ -128,9 +128,10 @@ class GeneradorDataset():
 
 
 
-        print(num_frames_d)
+        #print(num_frames_d)
        	#return x_dataset, y_dataset
-        print("Tamano del dataset {}".format(len(features_d)))
-        print("shape de los features {}".format(features_d[0].shape))
+        #print("Tamano del dataset {}".format(len(features_d)))
+        #print("shape de los features {}".format(features_d[0].shape))
+
         return features_d, labels_d, num_labels_d, num_frames_d
 

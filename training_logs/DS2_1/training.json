@@ -7,7 +7,7 @@
     },
     "train_descrip": {
         "distribucion": "train",
-        "tamano": 100
+        "tamano": 20
     },
     "test_descrip": {
         "distribucion": "test",

@@ -54,12 +54,12 @@ class DS2Pipeline(Pipeline):
 		}
 
 	@tf.function
-	def predict(self, x, y, training=True):
+	def predict(self, x, training=True):
 			return self.model(x, training=training)
 
 	@tf.function
 	def loss(self, x, y, training):
-			y_ = self.predict(x, y, training=True)
+			y_ = self.predict(x, training=True)
 
 			return y_, get_loss(y, y_)
 
@@ -88,9 +88,9 @@ class DS2Pipeline(Pipeline):
 
 		print("[INFO] Cargando distribuciones del datasetpipeline")
 		train = self.dataset_distrib(train_descrip)
-		#test = self.dataset_distrib(test_descrip)
+		test = self.dataset_distrib(test_descrip)
 
-		print(train)
+		t_shape = train._tensors[0].get_shape()[1:]
 
 		lr = setup["learning_rate"]
 		bs = setup["batch_size"]
@@ -101,37 +101,51 @@ class DS2Pipeline(Pipeline):
 		#optimizer = RMSprop()
 
 		train = train.batch(bs)
-		#test  = test.batch(bs)
+		test  = test.batch(bs)
 
-		self.train(optimizer, train, epochs)
+		self.train(optimizer, train, test, epochs)
 
 
-	def train(self, optimizer, train, epochs):
-		columnas = ["epoch", "loss", "WER"]
+	def train(self, optimizer, train, test, epochs):
+		columnas = ["epoch", "train_loss", "train_WER", "test_loss", "test_WER"]
 		logs = { }
 		for c in columnas:
 			logs[c] = []
 
 		for epoch in range(epochs):
 			logs["epoch"].append(epoch)
-			print("Iniciando epoch: {}".format(epoch))
+			print("[INFO] Iniciando epoch: {}".format(epoch))
 			self.memory()
 
-			epoch_loss, epoch_wer = self.train_epoch(optimizer, train, epoch)
+			print("[INFO] Training")
+			epoch_train_loss, epoch_train_wer = self.train_epoch(optimizer, train, epoch)
+			print("[INFO] Testing")
+			epoch_test_loss, epoch_test_wer = self.test_epoch(test, epoch)
 
-			if not epoch_loss == None:
-				loss_mean = tf.reduce_mean(epoch_loss).numpy()
-				wer_mean = tf.reduce_mean(epoch_wer).numpy()
-				logs["loss"].append(loss_mean)
-				logs["WER"].append(wer_mean)
+			if not epoch_train_loss == None:
+				train_loss_mean = tf.reduce_mean(epoch_train_loss).numpy()
+				train_wer_mean = tf.reduce_mean(epoch_train_wer).numpy()
 
-				print("Epoch {:03d}: Loss: {:.3f} WER: {}".format(epoch, loss_mean, wer_mean))
+				test_loss_mean = tf.reduce_mean(epoch_test_loss).numpy()
+				test_wer_mean = tf.reduce_mean(epoch_test_wer).numpy()
+
+				logs["train_loss"].append(train_loss_mean)
+				logs["train_WER"].append(train_wer_mean)
+				logs["test_loss"].append(test_loss_mean)
+				logs["test_WER"].append(test_wer_mean)
+
+				print("[INFO] Epoch {:03d}: train_loss: {:.3f} train_WER: {} test_loss: {:.3f} test_WER: {}"
+					.format(epoch, train_loss_mean, train_wer_mean, test_loss_mean, test_wer_mean))
 
 			# Guardando log en csv
 			df = pd.DataFrame(logs, columns=columnas)
 			df.to_csv(self.logs_path+self.nombre+"/logs.csv", index=False)
 
-			plt.plot(logs["loss"])
+			e = range(0, epoch+1)
+			plt.clf()
+			plt.plot(e, logs["train_loss"], label="train_loss")
+			plt.plot(e, logs["test_loss"], label="test_loss")
+			plt.legend()
 			plt.draw()
 			plt.pause(0.001)
 			#plt.show(block=False)
@@ -182,7 +196,7 @@ class DS2Pipeline(Pipeline):
 			
 		return err_wer
 
-	def printDecoded(self, cadenas, cadenas_y):
+	def printDecoded(self, cadenas, cadenas_y, tipo=""):
 		for i, c in enumerate(cadenas):
 			cy = cadenas_y[i]
 			print("CADENA ORIGINAL")
@@ -197,7 +211,7 @@ class DS2Pipeline(Pipeline):
 		}
 
 		df = pd.DataFrame(datos, columns=columnas)
-		df.to_csv(self.logs_path+self.nombre+"/prediccion.csv", index=False)
+		df.to_csv(self.logs_path+self.nombre+"/"+tipo+"prediccion.csv", index=False)
 
 
 	#@tf.function
@@ -219,13 +233,36 @@ class DS2Pipeline(Pipeline):
 			WER.append(self.WER(cadenas, cadenas_y))
 
 			if epoch % 10 == 0:
-				self.printDecoded(cadenas, cadenas_y)
+				self.printDecoded(cadenas, cadenas_y, tipo="train")
 
 			epoch_loss.append(loss_value)
 
 		tf.summary.trace_on()
 
 		return epoch_loss, WER
+
+	def test_epoch(self, test, epoch):
+		epoch_loss = [] 
+		WER = []
+	
+		for x, y in test:
+			y_, loss_value = self.loss(x, y, training=False)
+
+			l, nl, nf = y
+
+			d = self.decode(y_, nf)
+			cadenas = self.decode_cadenas(d)
+			cadenas_y = self.decode_input(y)
+
+			WER.append(self.WER(cadenas, cadenas_y))
+
+			if epoch % 10 == 0:
+				self.printDecoded(cadenas, cadenas_y, tipo="test")
+
+			epoch_loss.append(loss_value)
+
+		return epoch_loss, WER
+
 
 		
 
