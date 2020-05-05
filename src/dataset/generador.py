@@ -65,7 +65,6 @@ class GeneradorDataset():
             logits = tf.convert_to_tensor(self.vocabulario(cadena))
             labels = logits
             #labels = tf.expand_dims(logits, -1)
-            print(labels.shape)
 
             tamanos_labels.append(labels.shape[0])
             labels_list.append(labels)
@@ -75,7 +74,6 @@ class GeneradorDataset():
 
             # Obtine features del feature extractor
             features = self.features_extractor(sl, data)
-            print(features.shape)
 
             if self.fl > 0:
                 # Divide el spectrgrama en frames
@@ -123,11 +121,14 @@ class GeneradorDataset():
             features_d.append(x)
             num_labels_d.append(tf.convert_to_tensor([num_labels]))
             #num_frames_d.append(tf.convert_to_tensor([num_frames]))
-            num_frames_d.append(tf.convert_to_tensor([201]))
+            pf = 403 / 101
+            num_frames_d.append(tf.convert_to_tensor([int(num_frames // pf)]))
+            #num_frames_d.append(tf.convert_to_tensor([101]))
             labels_d.append(labels)
 
 
 
+        print(num_frames_d)
        	#return x_dataset, y_dataset
         print("Tamano del dataset {}".format(len(features_d)))
         print("shape de los features {}".format(features_d[0].shape))

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from .pipeline import Pipeline
 #from .. import ctc
 from ..ctc import get_loss
+from ..metricas import wer
 
 """
 Se define el pipeline de entrenamiento para Deep Speech 2, considerando:
@@ -96,7 +97,7 @@ class DS2Pipeline(Pipeline):
 		epochs = setup["epochs"]
 		i_epoch = setup["initial_epoch"]
 
-		optimizer = Adam()
+		optimizer = Adam(learning_rate=3e-4)
 		#optimizer = RMSprop()
 
 		train = train.batch(bs)
@@ -106,7 +107,7 @@ class DS2Pipeline(Pipeline):
 
 
 	def train(self, optimizer, train, epochs):
-		columnas = ["epoch", "loss"]
+		columnas = ["epoch", "loss", "WER"]
 		logs = { }
 		for c in columnas:
 			logs[c] = []
@@ -116,13 +117,15 @@ class DS2Pipeline(Pipeline):
 			print("Iniciando epoch: {}".format(epoch))
 			self.memory()
 
-			epoch_loss = self.train_epoch(optimizer, train)
+			epoch_loss, epoch_wer = self.train_epoch(optimizer, train, epoch)
 
 			if not epoch_loss == None:
 				loss_mean = tf.reduce_mean(epoch_loss).numpy()
+				wer_mean = tf.reduce_mean(epoch_wer).numpy()
 				logs["loss"].append(loss_mean)
+				logs["WER"].append(wer_mean)
 
-				print("Epoch {:03d}: Loss: {:.3f}".format(epoch, loss_mean))
+				print("Epoch {:03d}: Loss: {:.3f} WER: {}".format(epoch, loss_mean, wer_mean))
 
 			# Guardando log en csv
 			df = pd.DataFrame(logs, columns=columnas)
@@ -139,45 +142,90 @@ class DS2Pipeline(Pipeline):
 		y_ = tf.transpose(y_, [1, 0, 2])
 		decoded, _ = tf.nn.ctc_greedy_decoder(y_, sequence_length)
 
-		return decoded
+		return decoded[0]
+
+	def decode_cadenas(self, decoded):
+		encodedLabelStrs = [[] for i in range(20)]
+		idxDict = { b : [] for b in range(20) }
+
+		for (idx, idx2d) in enumerate(decoded.indices):
+			label = decoded.values[idx]
+			batchElement = idx2d[0] # index according to [b,t]
+			encodedLabelStrs[batchElement].append(label)
+
+		cadenas = []
+		for strs in encodedLabelStrs:
+			cadena = self.vocabulario.decodificar(strs)
+			cadenas.append(cadena)
+
+		return cadenas
+
+	def decode_input(self, y):
+		l, nl, nf = y
+
+		cadenas_y = []
+		for i, n in enumerate(nl):
+			cadena_y = self.vocabulario.decodificar(l[i, :n[0]])
+			cadenas_y.append(cadena_y)
+
+		return cadenas_y
+
+	def WER(self, cadenas, cadenas_y):
+		err_wer = []
+		for i, c in enumerate(cadenas):
+			cy = cadenas_y[i]
+			nw = len(cy.split())
+			err = wer(c.split(), cy.split())
+
+			err_wer.append(err/nw)
+
+			
+		return err_wer
+
+	def printDecoded(self, cadenas, cadenas_y):
+		for i, c in enumerate(cadenas):
+			cy = cadenas_y[i]
+			print("CADENA ORIGINAL")
+			print(cy)
+			print("CADENA MODELO")
+			print(c)
+
+		columnas = ["original", "prediccion"]
+		datos = {
+			"original": cadenas_y,
+			"prediccion": cadenas,
+		}
+
+		df = pd.DataFrame(datos, columns=columnas)
+		df.to_csv(self.logs_path+self.nombre+"/prediccion.csv", index=False)
+
 
 	#@tf.function
-	def train_epoch(self, optimizer, train):
-
+	def train_epoch(self, optimizer, train, epoch):
 		epoch_loss = [] 
+		WER = []
 	
 		tf.summary.trace_off()
 		for x, y in train:
 			y_, loss_value, grads = self.grad(x, y)
 			optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
-			_, _, lf = y
-			print("DECODING")
-			d = self.decode(y_, lf)
-			decoded = d[0]
+			l, nl, nf = y
 
-			encodedLabelStrs = [[] for i in range(20)]
-			idxDict = { b : [] for b in range(20) }
-			for (idx, idx2d) in enumerate(decoded.indices):
-				label = decoded.values[idx]
-				batchElement = idx2d[0] # index according to [b,t]
-				encodedLabelStrs[batchElement].append(label)
+			d = self.decode(y_, nf)
+			cadenas = self.decode_cadenas(d)
+			cadenas_y = self.decode_input(y)
 
+			WER.append(self.WER(cadenas, cadenas_y))
 
-			print("CADENAS")
-			for strs in encodedLabelStrs:
-				cadena = ""
-				for c in strs:
-					caracter = c.numpy()
-					cadena += self.vocabulario.caracteres[caracter]
-					
-				print(cadena)
+			if epoch % 10 == 0:
+				self.printDecoded(cadenas, cadenas_y)
 
 			epoch_loss.append(loss_value)
 
 		tf.summary.trace_on()
 
-		return epoch_loss
+		return epoch_loss, WER
 
 		
 

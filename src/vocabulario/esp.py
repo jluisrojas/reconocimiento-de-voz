@@ -49,6 +49,14 @@ class EspVocabulario:
 
 		return res
 
+	def decodificar(self, cadena):
+		cadena_d = ""
+		for c in cadena:
+			cadena_d += self.caracteres[c]
+
+		return cadena_d
+
+
 	"""
 	Regresa informacion del vocabulario usado
 	"""

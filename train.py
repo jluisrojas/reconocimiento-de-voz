@@ -13,11 +13,11 @@ def main():
 	K.clear_session()
 	print("[INFO] Inicializando modulos para pipeline")
 	#spectrograma = SpectrogramaFeatures(stft_fft=252)
-	spectrograma = SpectrogramaFeatures2(stft_fft=252)
+	spectrograma = SpectrogramaFeatures2(stft_fl=0.02, stft_fs=0.02)
 	vocabulario = EspVocabulario()
 
 	print("[INFO] Cargando modelo Deep Speech 2")
-	model = obtener_ds2(input_dim=(804, 252, 1), num_convs=1,
+	model = obtener_ds2(input_dim=(403, 252, 1), num_convs=1,
 		num_labels=len(vocabulario.caracteres)+1)
 
 	model.summary()
