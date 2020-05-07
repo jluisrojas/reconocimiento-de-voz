@@ -29,8 +29,8 @@ def main():
 
 	print(pipeline.get_config())
 
-	train_descripcion = DataDescripcion(distribucion="train", tamano=100)
-	test_descripcion = DataDescripcion(distribucion="test", tamano=20)
+	train_descripcion = DataDescripcion(distribucion="train", tamano=1000)
+	test_descripcion = DataDescripcion(distribucion="test", tamano=200)
 
 
 	print("[INFO] Entrenando modelo")

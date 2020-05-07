@@ -152,6 +152,8 @@ class DS2Pipeline(Pipeline):
 
 	@tf.function
 	def decode(self, y_, sequence_length):
+		b, f, _ = y_.get_shape()
+		sequence_length = tf.fill([b, 1], f)
 		sequence_length = tf.reshape(sequence_length, [-1])
 		y_ = tf.transpose(y_, [1, 0, 2])
 		decoded, _ = tf.nn.ctc_greedy_decoder(y_, sequence_length)
@@ -197,12 +199,14 @@ class DS2Pipeline(Pipeline):
 		return err_wer
 
 	def printDecoded(self, cadenas, cadenas_y, tipo=""):
+		"""
 		for i, c in enumerate(cadenas):
 			cy = cadenas_y[i]
 			print("CADENA ORIGINAL")
 			print(cy)
 			print("CADENA MODELO")
 			print(c)
+		"""
 
 		columnas = ["original", "prediccion"]
 		datos = {
