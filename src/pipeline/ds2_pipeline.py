@@ -90,7 +90,7 @@ class DS2Pipeline(Pipeline):
 		train = self.dataset_distrib(train_descrip)
 		test = self.dataset_distrib(test_descrip)
 
-		t_shape = train._tensors[0].get_shape()[1:]
+		#t_shape = train._tensors[0].get_shape()[1:]
 
 		lr = setup["learning_rate"]
 		bs = setup["batch_size"]

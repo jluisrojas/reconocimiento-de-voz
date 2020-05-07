@@ -1,0 +1,2 @@
+epoch,train_loss,train_WER,test_loss,test_WER
+0,233.63125610351562,1.0,169.1760711669922,1.0

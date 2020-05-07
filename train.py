@@ -29,8 +29,10 @@ def main():
 
 	print(pipeline.get_config())
 
-	train_descripcion = DataDescripcion(distribucion="train", tamano=1000)
-	test_descripcion = DataDescripcion(distribucion="test", tamano=200)
+	# Max: 64,351
+	train_descripcion = DataDescripcion(distribucion="train", tamano=10000)
+	# Max 13,221
+	test_descripcion = DataDescripcion(distribucion="test", tamano=2000)
 
 
 	print("[INFO] Entrenando modelo")

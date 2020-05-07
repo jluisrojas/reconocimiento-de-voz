@@ -40,11 +40,11 @@ class CVMDistrib(DataDistrib):
 		# SE CHECARIA SI EL DATASET YA SE GENERO UNA VEZ
 		# SI ESE ES EL CASO, SE CARGA DE TF RECORD
 		generador = GeneradorDataset(self.features, self.vocabulario, fl=self.fl, fs=self.fs)
-		features, labels, num_labels, num_frames = generador.generar_distribucion(self.root_path, distribucion, sub_ruta="clips/", tamano=tamano)
+		#features, labels, num_labels, num_frames = generador.generar_distribucion(self.root_path, distribucion, sub_ruta="clips/", tamano=tamano)
 
 		# Convierte los tensors a tf.data.Dataset
-		dataset = tf.data.Dataset.from_tensor_slices((features, (labels,
-			num_labels, num_frames)))
+		#dataset = tf.data.Dataset.from_tensor_slices((features, (labels, num_labels, num_frames)))
+		dataset = generador.generar_distribucion(self.root_path, distribucion, sub_ruta="clips/", tamano=tamano)
 
 		return dataset
 

@@ -99,6 +99,7 @@ class GeneradorDataset():
         num_labels_d = []
         num_frames_d = []
 
+        """
         # Padea todos los elementos del dataset
         for i, num_frames in enumerate(tamanos_frames):
             # Agrega padding a los features
@@ -125,6 +126,36 @@ class GeneradorDataset():
             num_frames_d.append(tf.convert_to_tensor([int(num_frames // pf)]))
             #num_frames_d.append(tf.convert_to_tensor([101]))
             labels_d.append(labels)
+        """
+
+        def gen():
+            # Padea todos los elementos del dataset
+            for i, num_frames in enumerate(tamanos_frames):
+                # Agrega padding a los features
+                if self.fl > 0:
+                    paddings = [[0,0], [0, max_frames- num_frames], [0,0], [0,0]]
+                else:
+                    paddings = [[0,0], [0, max_frames- num_frames], [0,0]]
+
+                frames = tf.pad(dataset[i], paddings, "CONSTANT")
+                frames = tf.expand_dims(frames, -1)
+                x = tf.squeeze(frames, axis=0)
+
+                # Agrega padding a los labels
+                num_labels = tamanos_labels[i]
+                labels = tf.pad(labels_list[i],[[0, max_labels-num_labels]], constant_values=-1)
+
+                # concatena el dataset
+                features_d.append(x)
+                num_labels_d.append(tf.convert_to_tensor([num_labels]))
+                pf = 403 / 101
+                num_frames_d.append(tf.convert_to_tensor([int(num_frames // pf)]))
+                #num_frames_d.append(tf.convert_to_tensor([101]))
+                labels_d.append(labels)
+
+                yield (x, (labels, tf.convert_to_tensor([num_labels]), tf.convert_to_tensor([num_frames])))
+
+
 
 
 
@@ -133,5 +164,10 @@ class GeneradorDataset():
         #print("Tamano del dataset {}".format(len(features_d)))
         #print("shape de los features {}".format(features_d[0].shape))
 
-        return features_d, labels_d, num_labels_d, num_frames_d
+        dataset2 = tf.data.Dataset.from_generator( 
+            gen, 
+           (tf.float32, (tf.int32, tf.int32, tf.int32)))
+        print(dataset2)
+        return dataset2
+        #return features_d, labels_d, num_labels_d, num_frames_d
 
