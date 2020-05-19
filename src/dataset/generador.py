@@ -99,7 +99,6 @@ class GeneradorDataset():
         num_labels_d = []
         num_frames_d = []
 
-        """
         # Padea todos los elementos del dataset
         for i, num_frames in enumerate(tamanos_frames):
             # Agrega padding a los features
@@ -155,6 +154,7 @@ class GeneradorDataset():
 
                 yield (x, (labels, tf.convert_to_tensor([num_labels]), tf.convert_to_tensor([num_frames])))
 
+        """
 
 
 
@@ -164,10 +164,8 @@ class GeneradorDataset():
         #print("Tamano del dataset {}".format(len(features_d)))
         #print("shape de los features {}".format(features_d[0].shape))
 
-        dataset2 = tf.data.Dataset.from_generator( 
-            gen, 
-           (tf.float32, (tf.int32, tf.int32, tf.int32)))
-        print(dataset2)
-        return dataset2
-        #return features_d, labels_d, num_labels_d, num_frames_d
+        #dataset2 = tf.data.Dataset.from_generator( gen,(tf.float32, (tf.int32, tf.int32, tf.int32)))
+        #print(dataset2)
+        #return dataset2
+        return features_d, labels_d, num_labels_d, num_frames_d
 

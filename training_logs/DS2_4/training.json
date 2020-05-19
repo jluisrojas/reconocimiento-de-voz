@@ -7,10 +7,10 @@
     },
     "train_descrip": {
         "distribucion": "trainEncuentra",
-        "tamano": 20
+        "tamano": 800
     },
     "test_descrip": {
-        "distribucion": "trainEncuentra",
-        "tamano": 20
+        "distribucion": "testEncuentra",
+        "tamano": 200
     }
 }

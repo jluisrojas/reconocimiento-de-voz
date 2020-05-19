@@ -107,7 +107,7 @@ class DS2Pipeline(Pipeline):
 
 
 	def train(self, optimizer, train, test, epochs):
-		columnas = ["epoch", "train_loss", "train_WER", "test_loss", "test_WER"]
+		columnas = ["epoch", "train_loss", "train_WER", "train_EER", "test_loss", "test_WER", "test_EER"]
 		logs = { }
 		for c in columnas:
 			logs[c] = []
@@ -118,24 +118,29 @@ class DS2Pipeline(Pipeline):
 			self.memory()
 
 			print("[INFO] Training")
-			epoch_train_loss, epoch_train_wer = self.train_epoch(optimizer, train, epoch)
+			epoch_train_loss, epoch_train_wer, epoch_train_eer = self.train_epoch(optimizer, train, epoch)
 			print("[INFO] Testing")
-			epoch_test_loss, epoch_test_wer = self.test_epoch(test, epoch)
+			epoch_test_loss, epoch_test_wer, epoch_test_eer = self.test_epoch(test, epoch)
 
 			if not epoch_train_loss == None:
 				train_loss_mean = tf.reduce_mean(epoch_train_loss).numpy()
 				train_wer_mean = tf.reduce_mean(epoch_train_wer).numpy()
+				train_eer_mean = tf.reduce_mean(epoch_train_eer).numpy()
 
 				test_loss_mean = tf.reduce_mean(epoch_test_loss).numpy()
 				test_wer_mean = tf.reduce_mean(epoch_test_wer).numpy()
+				test_eer_mean = tf.reduce_mean(epoch_test_eer).numpy()
 
 				logs["train_loss"].append(train_loss_mean)
 				logs["train_WER"].append(train_wer_mean)
+				logs["train_EER"].append(train_eer_mean)
+
 				logs["test_loss"].append(test_loss_mean)
 				logs["test_WER"].append(test_wer_mean)
+				logs["test_EER"].append(test_eer_mean)
 
-				print("[INFO] Epoch {:03d}: train_loss: {:.3f} train_WER: {} test_loss: {:.3f} test_WER: {}"
-					.format(epoch, train_loss_mean, train_wer_mean, test_loss_mean, test_wer_mean))
+				print("[INFO] Epoch {:03d}: train_loss: {:.3f} train_WER: {} train_EER: {} test_loss: {:.3f} test_WER: {} test_EER: {}"
+					.format(epoch, train_loss_mean, train_wer_mean, train_eer_mean, test_loss_mean, test_wer_mean, test_eer_mean))
 
 			# Guardando log en csv
 			df = pd.DataFrame(logs, columns=columnas)
@@ -186,14 +191,35 @@ class DS2Pipeline(Pipeline):
 
 		return cadenas_y
 
+	# Encuentrar error rate
+	def EER(self, cadenas_Y):
+		eer = []
+		for c in cadenas_Y:
+			encuentra = False
+			for p in c.split():
+				if p == "encuentra" and not encuentra:
+					encuentra = True
+					eer.append(0.0)
+		
+			if not encuentra:
+				eer.append(1.0)
+
+		return eer
+
 	def WER(self, cadenas, cadenas_y):
 		err_wer = []
+		#print("CADENAS")
+		#print(len(cadenas))
+		#print(len(cadenas_y))
 		for i, c in enumerate(cadenas):
-			cy = cadenas_y[i]
-			nw = len(cy.split())
-			err = wer(c.split(), cy.split())
+			if i < len(cadenas_y):
+				cy = cadenas_y[i]
+				nw = len(cy.split())
+				err = wer(c.split(), cy.split())
 
-			err_wer.append(err/nw)
+				err_wer.append(err/nw)
+			else:
+				err_wer.append(1.0)
 
 			
 		return err_wer
@@ -222,6 +248,7 @@ class DS2Pipeline(Pipeline):
 	def train_epoch(self, optimizer, train, epoch):
 		epoch_loss = [] 
 		WER = []
+		EER = []
 	
 		tf.summary.trace_off()
 		for x, y in train:
@@ -235,6 +262,7 @@ class DS2Pipeline(Pipeline):
 			cadenas_y = self.decode_input(y)
 
 			WER.append(self.WER(cadenas, cadenas_y))
+			EER.append(self.EER(cadenas))
 
 			if epoch % 10 == 0:
 				self.printDecoded(cadenas, cadenas_y, tipo="train")
@@ -243,11 +271,12 @@ class DS2Pipeline(Pipeline):
 
 		tf.summary.trace_on()
 
-		return epoch_loss, WER
+		return epoch_loss, WER, EER
 
 	def test_epoch(self, test, epoch):
 		epoch_loss = [] 
 		WER = []
+		EER = []
 	
 		for x, y in test:
 			y_, loss_value = self.loss(x, y, training=False)
@@ -259,13 +288,14 @@ class DS2Pipeline(Pipeline):
 			cadenas_y = self.decode_input(y)
 
 			WER.append(self.WER(cadenas, cadenas_y))
+			EER.append(self.EER(cadenas))
 
 			if epoch % 10 == 0:
 				self.printDecoded(cadenas, cadenas_y, tipo="test")
 
 			epoch_loss.append(loss_value)
 
-		return epoch_loss, WER
+		return epoch_loss, WER, EER
 
 
 		
